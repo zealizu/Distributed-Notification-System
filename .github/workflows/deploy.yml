@@ -3,53 +3,54 @@ name: Flask CI
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      # Step 2: Set up Python
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
         with:
           python-version: 3.13
 
-      - name: Create virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-
+      # Step 3: Set environment variables from secrets
       - name: Set Environment Variables
         run: |
           echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> $GITHUB_ENV
           echo "USER_ENDPOINT=${{ secrets.USER_ENDPOINT }}" >> $GITHUB_ENV
           echo "TEMPLATE_ENDPOINT=${{ secrets.TEMPLATE_ENDPOINT }}" >> $GITHUB_ENV
-          # Decode Firebase key from base64
-          echo "FIREBASE_KEY=$(echo ${{ secrets.FIREBASE_KEY_BASE64 }} | base64 --decode)" >> $GITHUB_ENV
+          # Decode Firebase key from base64 and save as FIREBASE_KEY
+          echo "FIREBASE_KEY=$(echo ${{ secrets.FIREBASE_KEY }} | base64 --decode)" >> $GITHUB_ENV
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> $GITHUB_ENV
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Print debugging info
+      # Step 4: Create and activate virtual environment, install dependencies
+      - name: Install Dependencies
         run: |
-          echo "Python Version: $(python --version)"
-          echo "Working Directory: $(pwd)"
-          echo "Environment Variables:"
-          echo "RABBITMQ_HOST=$RABBITMQ_HOST"
-          echo "USER_ENDPOINT=$USER_ENDPOINT"
-          echo "TEMPLATE_ENDPOINT=$TEMPLATE_ENDPOINT"
-          echo "REDIS_HOST=$REDIS_HOST"
-          echo "REDIS_PORT=$REDIS_PORT"
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
+      # Step 5: Run tests
       - name: Run Tests
         run: |
           source venv/bin/activate
           python app.py
+
+      # Step 6 (Optional): Print Python and project info for debugging
+      - name: Debug Info
+        run: |
+          source venv/bin/activate
+          echo "Python version: $(python --version)"
+          echo "Working directory: $(pwd)"
+          echo "Installed packages: $(pip list)"
