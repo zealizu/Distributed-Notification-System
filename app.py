@@ -168,5 +168,6 @@ def health():
     return jsonify({'status': 'healthy', 'queue': "push.queue", 'breaker_state': breaker.current_state}), 200
 
 if __name__ == "__main__":
-    start_consumer()
+    if os.environ.get("CI") != "true":
+        start_consumer()
     app.run(port=5050)
