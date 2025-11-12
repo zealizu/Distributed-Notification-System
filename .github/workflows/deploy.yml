@@ -51,4 +51,4 @@ jobs:
       - name: Run tests
         run: |
           source venv/bin/activate
-          python test_hello.py
+          python app.py
