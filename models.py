@@ -48,7 +48,7 @@ class UserData(BaseModel):
 
 class APIResponse(BaseModel):
     success: bool
-    data: Optional[UserData]
+    data: UserData
     error: Optional[str]
-    message: Optional[str]
+    message: str
     meta: Optional[dict]

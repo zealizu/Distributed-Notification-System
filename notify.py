@@ -12,12 +12,13 @@ def send_notification():
         # 1. Fallback notification (for mobile / older clients)
         notification=messaging.Notification(
             title="title",
-            body="this is a new notification"
+            body="this is a new notification",
+            image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBfZLfqCIbkDagoUMrIPr1wXSu3uqja01UJA&s"
         ),
         # 2. Web-specific rich notification
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
-                title="title",
+                title="HNG WILL NOT BE THE END OF US",
                 body="this is a new notification",
                 image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBfZLfqCIbkDagoUMrIPr1wXSu3uqja01UJA&s",
                 icon="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBfZLfqCIbkDagoUMrIPr1wXSu3uqja01UJA&s",
@@ -29,7 +30,7 @@ def send_notification():
             "link": "https://google.com"
         },
         
-        token="djQe-Uog-jsWBgK_wfQBAm:APA91bHrpCd0D3Wbcw9oQN8zY6Bp7w_dsBFPHJtQWDZ3jCnkqzYZeeRB5K4mhtVMMSGE5WlRaiEkfWx1pT1PkJ5gSVioS5O3QoVls1_-JozyXO96SmrnXwU"
+        token="eXi6whn1GG7ZxLS9hY_keT:APA91bE2OC5K6YaBfVYzFKzTJjIgyOlcwuUllSaejhfqX3lyrTf-Ocj5cWf0ra1IT423gLo43Pz_jYrOGtwuTJajtTmREh4qdnVttQ0dXuLkY-oPsirl9gM"
     )
     
     messaging.send(message)

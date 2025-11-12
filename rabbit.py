@@ -3,8 +3,14 @@ from pika.exchange_type import ExchangeType
 import random
 import time
 import json
+import os
+from dotenv import load_dotenv
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+load_dotenv()
+
+RABBITMQ_URL = os.environ["RABBITMQ_HOST"]
+
+connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
 channel = connection.channel()
 
 channel.exchange_declare(exchange="notification.direct", exchange_type=ExchangeType.direct)
