@@ -1,11 +1,18 @@
 import firebase_admin
 from firebase_admin import credentials, messaging
 from firebase_admin.exceptions import InvalidArgumentError
+import json
+import os
+from dotenv import load_dotenv
 
-cred = credentials.Certificate("/Users/mac/Desktop/flask/notify/firebaseKey.json")
+load_dotenv()
+FIREBASE_KEY = os.environ.get("FIREBASE_KEY") 
+
+cred_dict = json.loads(FIREBASE_KEY)
+cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
 
-def send_notification():
+def send_notification(push_token):
     # raise Exception("Simulated FCM failure")
     print("Sending Notification")
     message = messaging.Message(
@@ -13,7 +20,7 @@ def send_notification():
         notification=messaging.Notification(
             title="title",
             body="this is a new notification",
-            image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBfZLfqCIbkDagoUMrIPr1wXSu3uqja01UJA&s"
+            image="e"
         ),
         # 2. Web-specific rich notification
         webpush=messaging.WebpushConfig(
@@ -30,7 +37,7 @@ def send_notification():
             "link": "https://google.com"
         },
         
-        token="eXi6whn1GG7ZxLS9hY_keT:APA91bE2OC5K6YaBfVYzFKzTJjIgyOlcwuUllSaejhfqX3lyrTf-Ocj5cWf0ra1IT423gLo43Pz_jYrOGtwuTJajtTmREh4qdnVttQ0dXuLkY-oPsirl9gM"
+        token= push_token
     )
     
     messaging.send(message)

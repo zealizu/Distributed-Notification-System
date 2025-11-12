@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, HttpUrl, EmailStr
 from datetime import datetime
-from uuid import UUID
 
 class NotificationType(str, Enum):
     email = "email"
@@ -23,7 +22,7 @@ class NotificationUserData(BaseModel):
 
 class NotificationPayload(BaseModel):
     notification_type: NotificationType
-    user_id: UUID
+    user_id: str
     template_code: str  
     variables: NotificationUserData
     request_id: str
@@ -37,7 +36,7 @@ class UserPreference(BaseModel):
 
 
 class UserData(BaseModel):
-    id: UUID
+    id: str
     email: EmailStr
     name: str
     push_token: str
