@@ -27,8 +27,9 @@ jobs:
           echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> $GITHUB_ENV
           echo "USER_ENDPOINT=${{ secrets.USER_ENDPOINT }}" >> $GITHUB_ENV
           echo "TEMPLATE_ENDPOINT=${{ secrets.TEMPLATE_ENDPOINT }}" >> $GITHUB_ENV
-          # Decode Firebase key from base64 and save as FIREBASE_KEY
-          echo "FIREBASE_KEY=$(echo ${{ secrets.FIREBASE_KEY }} | base64 --decode)" >> $GITHUB_ENV
+          # Decode Firebase key safely into FIREBASE_KEY
+          printf "%s" "${{ secrets.FIREBASE_KEY }}" | base64 --decode >> firebase_key.json
+          echo "FIREBASE_KEY=$(cat firebase_key.json | tr -d '\n')" >> $GITHUB_ENV
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> $GITHUB_ENV
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
