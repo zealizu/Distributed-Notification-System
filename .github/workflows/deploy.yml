@@ -3,8 +3,6 @@ name: Flask CI
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
 
 jobs:
   build:
@@ -12,22 +10,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: 3.13
-
-      - name: Set environment variables from GitHub Secrets
-        run: |
-          echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> $GITHUB_ENV
-          echo "USER_ENDPOINT=${{ secrets.USER_ENDPOINT }}" >> $GITHUB_ENV
-          echo "TEMPLATE_ENDPOINT=${{ secrets.TEMPLATE_ENDPOINT }}" >> $GITHUB_ENV
-          echo "FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}" >> $GITHUB_ENV
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> $GITHUB_ENV
-          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
 
       - name: Create virtual environment
         run: |
@@ -36,19 +24,32 @@ jobs:
 
       - name: Install dependencies
         run: |
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
 
-      - name: Print debugging information
+      - name: Set Environment Variables
         run: |
-          source venv/bin/activate
+          echo "RABBITMQ_HOST=${{ secrets.RABBITMQ_HOST }}" >> $GITHUB_ENV
+          echo "USER_ENDPOINT=${{ secrets.USER_ENDPOINT }}" >> $GITHUB_ENV
+          echo "TEMPLATE_ENDPOINT=${{ secrets.TEMPLATE_ENDPOINT }}" >> $GITHUB_ENV
+          # Decode Firebase key from base64
+          echo "FIREBASE_KEY=$(echo ${{ secrets.FIREBASE_KEY_BASE64 }} | base64 --decode)" >> $GITHUB_ENV
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Print debugging info
+        run: |
           echo "Python Version: $(python --version)"
           echo "Working Directory: $(pwd)"
-          echo "Contents of Working Directory: $(ls -l)"
-          echo "Contents of site-packages: $(ls -l venv/lib/python*/site-packages)"
+          echo "Environment Variables:"
+          echo "RABBITMQ_HOST=$RABBITMQ_HOST"
+          echo "USER_ENDPOINT=$USER_ENDPOINT"
+          echo "TEMPLATE_ENDPOINT=$TEMPLATE_ENDPOINT"
+          echo "REDIS_HOST=$REDIS_HOST"
+          echo "REDIS_PORT=$REDIS_PORT"
 
-      - name: Run tests
+      - name: Run Tests
         run: |
           source venv/bin/activate
           python app.py
