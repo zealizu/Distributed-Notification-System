@@ -5,7 +5,6 @@ import time
 import json
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 RABBITMQ_URL = os.environ["RABBITMQ_HOST"]
@@ -18,17 +17,20 @@ channel.queue_bind(queue="push.queue", exchange="notifications.direct", routing_
 
 
 message ={
+  "pattern": "send_push_event",
+  "data":{
   "notification_type": "push",
-  "user_id": "ce958ef2-471c-4b2b-bb6e-0be8eae5e2ba",
-  "template_code": "PRODUCT_UPDATE",
+  "user_id": "c1e37847-4073-425e-a2a0-eafbf5b79098",
+  "template_code": "REMINDER",
   "variables": {
     "name": "Alex Smith",
     "link": "https://example.com/view",
     "meta": {}
   },
-  "request_id": "req-push-67892",
+  "request_id": "req-push-9260",
   "priority": 1,
   "metadata": {}
+}
 }
 
 channel.basic_publish(exchange='notifications.direct', routing_key="push", body=json.dumps(message))

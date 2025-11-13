@@ -29,6 +29,10 @@ class NotificationPayload(BaseModel):
     priority: int
     metadata: Optional[Dict[str, Any]] = None
 
+class NotificationEvent(BaseModel):
+    pattern: str
+    data: NotificationPayload
+
 class UserPreference(BaseModel):
     email: bool
     push: bool
