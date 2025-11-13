@@ -46,8 +46,6 @@ r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,password=REDIS_PASSWORD, ssl=Tr
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-channel = connection.channel()
 
 def callback(ch, method, properties, body):
     """Process notification messages from RabbitMQ."""
@@ -102,7 +100,7 @@ def callback(ch, method, properties, body):
             except InvalidArgumentError:
                 logger.info(f"Invalid device token")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                channel.basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
+                ch.connection.channel().basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
                 update_notifcation_status(request_id, "failed")
                 r.set(idempotency_key, 1, ex=3600 * 6)  # keep record for 6 hours
                 r.delete(retry_key)            
@@ -113,7 +111,7 @@ def callback(ch, method, properties, body):
             if retries >= MAX_RETRIES:
                 logger.error(f"Max retries reached ({retries}) → moving to dead-letter queue")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                channel.basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
+                ch.connection.channel().basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
                 r.delete(retry_key)
             else:
                 delay = RETRY_DELAY_BASE * (2 ** (retries - 1))
@@ -124,7 +122,7 @@ def callback(ch, method, properties, body):
     except ValidationError as e:
         logger.error(f"Invalid payload:, {e.json()} moving to dead-letter queue")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-        channel.basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
+        ch.connection.channel().basic_publish(exchange = "notifications.direct", routing_key="failed", body=body)
         update_notifcation_status(request_id, "failed")
         
 
@@ -133,6 +131,8 @@ def start_consumer():
     def connect_and_consume():
         while True:
             try:
+                connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+                channel = connection.channel()
                 channel.exchange_declare(exchange="notifications.direct", exchange_type=ExchangeType.direct, durable=True)
                 failed_queue = channel.queue_declare(queue="failed.queue", durable=True)
                 push_queue = channel.queue_declare(queue="push.queue",durable=True)
@@ -177,6 +177,5 @@ def health():
     return jsonify({'status': 'healthy', 'queue': "push.queue", 'breaker_state': breaker.current_state}), 200
 
 if __name__ == "__main__":
-    if os.environ.get("CI") != "true":
-        start_consumer()
-    app.run(host='0.0.0.0', port=8080)
+    start_consumer()
+    app.run(host='0.0.0.0', port=5000)
