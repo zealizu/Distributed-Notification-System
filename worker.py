@@ -38,7 +38,6 @@ r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,password=REDIS_PASSWORD, ssl=Tr
 breaker = CircuitBreaker(fail_max=5, reset_timeout=60,  listeners=[RedisBreakerListener(r)])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-r.set("breaker_state", "closed")
 
 def callback(ch, method, properties, body):
     """Process notification messages from RabbitMQ."""
@@ -85,7 +84,8 @@ def callback(ch, method, properties, body):
                 r.set(idempotency_key, 1, ex=3600 * 6)  # keep record for 6 hours
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 r.delete(retry_key)
-                update_notifcation_status(request_id, "delivered")
+                update_response = update_notifcation_status(request_id, "delivered")
+                logger.info(update_response)
                 logger.info("Notification sent successfully!")
             except CircuitBreakerError:
                 logger.error("Circuit open: storing message for delayed retry.")
@@ -128,11 +128,11 @@ def start_consumer():
                 channel = connection.channel()
                 channel.exchange_declare(exchange="notifications.direct", exchange_type=ExchangeType.direct, durable=True)
                 failed_queue = channel.queue_declare(queue="failed.queue", durable=True)
-                push_queue = channel.queue_declare(queue="push.queue",durable=True)
-                channel.queue_bind(exchange="notifications.direct", queue=push_queue.method.queue, routing_key="push")
+                push_queue = channel.queue_declare(queue="send_push_event",durable=True)
+                channel.queue_bind(exchange="notifications.direct", queue=push_queue.method.queue, routing_key="send_push_event")
                 channel.queue_bind(exchange="notifications.direct", queue=failed_queue.method.queue, routing_key="failed")
                 channel.basic_qos(prefetch_count=1) #this means that each consumer will only process one message at a time
-                channel.basic_consume(queue="push.queue", on_message_callback=callback)
+                channel.basic_consume(queue="send_push_event", on_message_callback=callback)
                 logger.info('Push consumer started. Waiting for messages...')
                 channel.start_consuming()
             except Exception as e:
